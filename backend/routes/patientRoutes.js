@@ -29,3 +29,13 @@ router.get('/', async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
+
+// This route DELETES a patient by their specific ID
+router.delete('/:id', async (req, res) => {
+    try {
+        await Patient.findByIdAndDelete(req.params.id);
+        res.json({ message: "Patient Deleted Successfully" });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
