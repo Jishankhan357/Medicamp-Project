@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Mic, MicOff, Save, Activity, Trash2 } from 'lucide-react'; // Added Trash2 icon
+import { Mic, MicOff, Save, Activity, Trash2, HeartPulse } from 'lucide-react';
 
 function App() {
   const [formData, setFormData] = useState({ name: '', age: '', symptoms: '' });
-  const [patients, setPatients] = useState([]); 
+  const [patients, setPatients] = useState([]);
   const [isListening, setIsListening] = useState(false);
 
   // --- 1. FETCH DATA ---
@@ -18,15 +18,15 @@ function App() {
   };
 
   useEffect(() => {
-    fetchPatients(); 
+    fetchPatients();
   }, []);
 
-  // --- 2. DELETE DATA (NEW FEATURE) ---
+  // --- 2. DELETE DATA ---
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this patient?")) {
       try {
         await axios.delete(`http://127.0.0.1:5000/api/patients/${id}`);
-        fetchPatients(); // Refresh list immediately after deleting
+        fetchPatients();
       } catch (err) {
         alert("Error deleting patient");
       }
@@ -64,76 +64,126 @@ function App() {
     try {
       await axios.post('http://127.0.0.1:5000/api/patients/add', formData);
       alert("Patient Saved Successfully!");
-      setFormData({ name: '', age: '', symptoms: '' }); 
-      fetchPatients(); 
+      setFormData({ name: '', age: '', symptoms: '' });
+      fetchPatients();
     } catch (err) {
       alert("Error saving data. Check Backend!");
     }
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial', maxWidth: '600px', margin: 'auto' }}>
-      <h2 style={{ color: '#2c3e50', textAlign: 'center' }}>🏥 Medicamp System</h2>
+    <div className="min-h-screen p-4 md:p-8 font-sans text-slate-800">
       
-      {/* FORM SECTION */}
-      <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '15px', padding: '20px', border: '1px solid #eee', borderRadius: '10px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-        <input 
-          type="text" placeholder="Patient Name" 
-          value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
-          style={inputStyle} required
-        />
-        <input 
-          type="number" placeholder="Age" 
-          value={formData.age} onChange={(e) => setFormData({...formData, age: e.target.value})}
-          style={inputStyle} required
-        />
-        
-        <div style={{ position: 'relative' }}>
-          <textarea 
-            placeholder="Symptoms (Type or Use Mic)" 
-            value={formData.symptoms} onChange={(e) => setFormData({...formData, symptoms: e.target.value})}
-            style={{ ...inputStyle, height: '80px' }} required
-          />
-          <button 
-            type="button" onClick={toggleListening}
-            style={{ position: 'absolute', right: '10px', bottom: '10px', border: 'none', background: 'none', cursor: 'pointer' }}
-          >
-            {isListening ? <MicOff color="red" /> : <Mic color="blue" />}
-          </button>
+      {/* HEADER SECTION */}
+      <header className="mb-8 text-center">
+        <div className="flex justify-center items-center gap-2 mb-2">
+          <HeartPulse size={40} className="text-blue-600" />
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-800">Medicamp System</h1>
         </div>
+        <p className="text-slate-500">Efficient Voice-Powered Patient Entry</p>
+      </header>
 
-        <button type="submit" style={btnStyle}>
-          <Save size={18} /> Save Patient Record
-        </button>
-      </form>
+      {/* MAIN GRID LAYOUT */}
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        {/* LEFT COLUMN: FORM */}
+        <div className="bg-white p-6 rounded-2xl shadow-xl border border-slate-100 h-fit">
+          <h2 className="text-xl font-semibold mb-4 text-blue-700 border-b pb-2">New Patient Entry</h2>
+          
+          <form onSubmit={handleSave} className="flex flex-col gap-5">
+            <div>
+              <label className="block text-sm font-medium text-slate-600 mb-1">Full Name</label>
+              <input 
+                type="text" 
+                placeholder="e.g. Rahul Sharma" 
+                value={formData.name} 
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                className="w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+                required
+              />
+            </div>
 
-      {/* LIST SECTION */}
-      <h3 style={{ marginTop: '30px', color: '#34495e' }}>📋 Recent Patients</h3>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {patients.map((p) => (
-          <div key={p._id} style={cardStyle}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 'bold', fontSize: '18px' }}>{p.name} <span style={{ fontSize: '14px', color: '#7f8c8d' }}>({p.age} yrs)</span></div>
-              <div style={{ color: '#e74c3c', marginTop: '5px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <Activity size={14} /> {p.symptoms}
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-600 mb-1">Age</label>
+              <input 
+                type="number" 
+                placeholder="e.g. 45" 
+                value={formData.age} 
+                onChange={(e) => setFormData({...formData, age: e.target.value})}
+                className="w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+                required
+              />
             </div>
             
-            {/* DELETE BUTTON */}
-            <button onClick={() => handleDelete(p._id)} style={deleteBtnStyle}>
-              <Trash2 size={18} />
+            <div className="relative">
+              <label className="block text-sm font-medium text-slate-600 mb-1">Symptoms (Voice Enabled)</label>
+              <textarea 
+                placeholder="Tap microphone and speak..." 
+                value={formData.symptoms} 
+                onChange={(e) => setFormData({...formData, symptoms: e.target.value})}
+                className="w-full p-3 h-32 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none transition resize-none"
+                required
+              />
+              <button 
+                type="button" 
+                onClick={toggleListening}
+                className={`absolute right-3 bottom-3 p-2 rounded-full transition-all ${isListening ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
+              >
+                {isListening ? <MicOff size={24} /> : <Mic size={24} />}
+              </button>
+            </div>
+
+            <button 
+              type="submit" 
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02]"
+            >
+              <Save size={20} /> Save Record
             </button>
+          </form>
+        </div>
+
+        {/* RIGHT COLUMN: LIST */}
+        <div className="bg-white p-6 rounded-2xl shadow-xl border border-slate-100">
+          <div className="flex justify-between items-center mb-6 border-b pb-2">
+            <h2 className="text-xl font-semibold text-slate-700">Recent Patients</h2>
+            <span className="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full">
+              {patients.length} Total
+            </span>
           </div>
-        ))}
+
+          <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+            {patients.length === 0 ? (
+              <p className="text-center text-slate-400 py-10">No patients added yet.</p>
+            ) : (
+              patients.map((p) => (
+                <div key={p._id} className="group bg-slate-50 hover:bg-white border border-transparent hover:border-blue-200 p-4 rounded-xl shadow-sm hover:shadow-md transition-all flex justify-between items-start">
+                  <div>
+                    <div className="flex items-baseline gap-2">
+                      <h3 className="text-lg font-bold text-slate-800">{p.name}</h3>
+                      <span className="text-sm text-slate-500">({p.age} yrs)</span>
+                    </div>
+                    <div className="mt-2 text-slate-600 flex items-start gap-2">
+                      <Activity size={16} className="mt-1 text-blue-500 shrink-0" /> 
+                      <p className="text-sm leading-relaxed">{p.symptoms}</p>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={() => handleDelete(p._id)} 
+                    className="text-slate-300 hover:text-red-500 p-2 rounded-full hover:bg-red-50 transition-colors"
+                    title="Delete Patient"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
       </div>
     </div>
   );
 }
-
-// Styles
-const inputStyle = { padding: '12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '16px', width: '95%' };
-const btnStyle = { padding: '12px', backgroundColor: '#3498db', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', fontSize: '16px' };
-const cardStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px', borderLeft: '5px solid #3498db', backgroundColor: '#f9f9f9', borderRadius: '4px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' };
-const deleteBtnStyle = { backgroundColor: 'transparent', border: 'none', color: '#e74c3c', cursor: 'pointer', padding: '5px' };
 
 export default App;
