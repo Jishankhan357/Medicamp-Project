@@ -3,10 +3,11 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
+
 // 1. Add this near the top (with other requires)
 const authRoutes = require('./routes/authRoutes');
 const patientRoutes = require('./routes/patientRoutes');
-
+const inventoryRoutes = require('./routes/inventoryRoutes');
 
 const app = express();
 app.use(cors());
@@ -27,6 +28,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/medicamp_db')
 
 // 4. Add this near the bottom (before app.listen)
 app.use('/api/patients', patientRoutes);
+app.use('/api/inventory', inventoryRoutes);
 
 // This MUST be at the very bottom of server.js
 const PORT = 5000;
