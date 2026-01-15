@@ -1,26 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginSuccess, logout } from './redux/authSlice';
+import { fetchPatients, addPatient, deletePatient } from './redux/patientSlice'; // Import actions
 import { Mic, MicOff, Save, Activity, Trash2, HeartPulse, Moon, Sun, LogOut } from 'lucide-react';
 import Login from './Login';
 
 function App() {
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const dispatch = useDispatch();
+  
+  // Get Auth State
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  // Get Patient State (List & Loading)
+  const { list: patients, loading } = useSelector((state) => state.patients);
+
   const [formData, setFormData] = useState({ name: '', age: '', symptoms: '' });
-  const [patients, setPatients] = useState([]);
   const [isListening, setIsListening] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-
-  // --- AUTH HELPERS ---
-  const handleLoginSuccess = (newToken) => {
-    localStorage.setItem('token', newToken);
-    setToken(newToken);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setPatients([]); // Clear sensitive data on logout
-  };
 
   // --- DARK MODE ---
   useEffect(() => {
@@ -28,51 +23,25 @@ function App() {
     else document.documentElement.classList.remove('dark');
   }, [darkMode]);
 
-  // --- 1. SECURE FETCH ---
-  const fetchPatients = async () => {
-    if (!token) return;
-    try {
-      const res = await axios.get('http://127.0.0.1:5000/api/patients', {
-        headers: { 'x-auth-token': token } // <--- SHOW ID CARD
-      });
-      setPatients(res.data);
-    } catch (err) {
-      console.error("Access Denied:", err);
-      if (err.response && err.response.status === 401) handleLogout(); // Logout if token expires
-    }
-  };
-
+  // --- FETCH ON LOAD ---
   useEffect(() => {
-    fetchPatients();
-  }, [token]);
+    if (isAuthenticated) {
+      dispatch(fetchPatients()); // Redux does the work now!
+    }
+  }, [isAuthenticated, dispatch]);
 
-  // --- 2. SECURE DELETE ---
-  const handleDelete = async (id) => {
+  // --- HANDLERS ---
+  const handleDelete = (id) => {
     if (window.confirm("Are you sure?")) {
-      try {
-        await axios.delete(`http://127.0.0.1:5000/api/patients/${id}`, {
-          headers: { 'x-auth-token': token } // <--- SHOW ID CARD
-        });
-        fetchPatients();
-      } catch (err) {
-        alert("Error deleting");
-      }
+      dispatch(deletePatient(id)); // One line to delete!
     }
   };
 
-  // --- 3. SECURE SAVE ---
-  const handleSave = async (e) => {
+  const handleSave = (e) => {
     e.preventDefault();
-    try {
-      await axios.post('http://127.0.0.1:5000/api/patients/add', formData, {
-        headers: { 'x-auth-token': token } // <--- SHOW ID CARD
-      });
-      alert("Saved Securely!");
-      setFormData({ name: '', age: '', symptoms: '' });
-      fetchPatients();
-    } catch (err) {
-      alert("Error saving");
-    }
+    dispatch(addPatient(formData)); // One line to save!
+    alert("Request Sent to Redux!");
+    setFormData({ name: '', age: '', symptoms: '' });
   };
 
   // --- VOICE ---
@@ -95,7 +64,9 @@ function App() {
     else { recognition.start(); setIsListening(true); }
   };
 
-  if (!token) return <Login onLogin={handleLoginSuccess} />;
+  if (!isAuthenticated) {
+    return <Login onLogin={(token) => dispatch(loginSuccess(token))} />;
+  }
 
   return (
     <div className="min-h-screen p-4 md:p-8 font-sans transition-colors duration-300 bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
@@ -104,14 +75,14 @@ function App() {
           <HeartPulse size={40} className="text-blue-600 dark:text-blue-400" />
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Medicamp System</h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Secure Doctor Portal</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">Redux Enterprise Edition</p>
           </div>
         </div>
         <div className="flex gap-4">
             <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700">
                 {darkMode ? <Sun className="text-yellow-400" /> : <Moon className="text-slate-600" />}
             </button>
-            <button onClick={handleLogout} className="flex items-center gap-2 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-200 px-4 py-2 rounded-lg font-semibold hover:bg-red-200 transition-colors">
+            <button onClick={() => dispatch(logout())} className="flex items-center gap-2 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-200 px-4 py-2 rounded-lg font-semibold hover:bg-red-200 transition-colors">
                 <LogOut size={18} /> Logout
             </button>
         </div>
@@ -138,7 +109,10 @@ function App() {
             <span className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 text-xs font-bold px-3 py-1 rounded-full">{patients.length} Total</span>
           </div>
           <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-            {patients.map((p) => (
+            {/* Show Loading Spinner if fetching */}
+            {loading && <p className="text-center text-blue-500">Syncing with database...</p>}
+            
+            {!loading && patients.map((p) => (
               <div key={p._id} className="group bg-slate-50 dark:bg-slate-700/50 hover:bg-white dark:hover:bg-slate-700 border border-transparent hover:border-blue-200 dark:hover:border-blue-500 p-4 rounded-xl shadow-sm hover:shadow-md transition-all flex justify-between items-start">
                 <div>
                   <div className="flex items-baseline gap-2"><h3 className="text-lg font-bold text-slate-800 dark:text-white">{p.name}</h3><span className="text-sm text-slate-500 dark:text-slate-400">({p.age} yrs)</span></div>
