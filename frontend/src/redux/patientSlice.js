@@ -4,7 +4,7 @@ import axios from 'axios';
 // ---------------------------------------------------------
 // 1. SET THE CLOUD URL (Replace this if yours is different)
 // ---------------------------------------------------------
-const BASE_URL = "https://medicamp-backend.onrender.com/"; 
+const BASE_URL = "https://medicamp-backend.onrender.com"; 
 
 // --- THUNKS ---
 
