@@ -1,10 +1,16 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
+// ---------------------------------------------------------
+// 1. SET THE CLOUD URL
+// ---------------------------------------------------------
+const BASE_URL = "https://medicamp-backend.onrender.com"; 
+
 // THUNKS
 export const fetchInventory = createAsyncThunk('inventory/fetch', async (_, { getState }) => {
   const token = getState().auth.token;
-  const response = await axios.get('http://127.0.0.1:5000/api/inventory', {
+  // CHANGE: Use BASE_URL
+  const response = await axios.get(`${BASE_URL}/api/inventory`, {
     headers: { 'x-auth-token': token }
   });
   return response.data;
@@ -12,7 +18,8 @@ export const fetchInventory = createAsyncThunk('inventory/fetch', async (_, { ge
 
 export const addItem = createAsyncThunk('inventory/add', async (itemData, { getState }) => {
   const token = getState().auth.token;
-  const response = await axios.post('http://127.0.0.1:5000/api/inventory/add', itemData, {
+  // CHANGE: Use BASE_URL
+  const response = await axios.post(`${BASE_URL}/api/inventory/add`, itemData, {
     headers: { 'x-auth-token': token }
   });
   return response.data;
@@ -20,7 +27,8 @@ export const addItem = createAsyncThunk('inventory/add', async (itemData, { getS
 
 export const deleteItem = createAsyncThunk('inventory/delete', async (id, { getState }) => {
   const token = getState().auth.token;
-  await axios.delete(`http://127.0.0.1:5000/api/inventory/${id}`, {
+  // CHANGE: Use BASE_URL
+  await axios.delete(`${BASE_URL}/api/inventory/${id}`, {
     headers: { 'x-auth-token': token }
   });
   return id;

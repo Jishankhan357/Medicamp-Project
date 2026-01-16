@@ -11,21 +11,26 @@ function Login({ onLogin }) {
     e.preventDefault();
     const endpoint = isRegistering ? 'register' : 'login';
     
+    // ---------------------------------------------------------
+    // CHANGE: Point to Cloud Backend
+    // ---------------------------------------------------------
+    const BASE_URL = "https://medicamp-backend.onrender.com";
+
     try {
-      const res = await axios.post(`http://127.0.0.1:5000/api/auth/${endpoint}`, {
+      const res = await axios.post(`${BASE_URL}/api/auth/${endpoint}`, {
         username,
         password
       });
 
       if (isRegistering) {
         alert("Registration Successful! Now please Login.");
-        setIsRegistering(false);
+        setIsRegistering(false); // Switch back to Login mode
       } else {
         // Login Successful -> Send token to App.js
         onLogin(res.data.token);
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Something went wrong");
+      alert(err.response?.data?.message || "Something went wrong. Server might be waking up (wait 30s).");
     }
   };
 
