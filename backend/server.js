@@ -21,8 +21,9 @@ app.get('/', (req, res) => {
 
 // 3. Connect to MongoDB (We will add the link later)
 // Replace your old connection code with this to see errors clearly
-mongoose.connect('mongodb://127.0.0.1:27017/medicamp_db')
-    .then(() => console.log("Success: Connected to MongoDB Database!"))
+// REPLACE your old mongoose.connect with this:
+mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/medicamp_db')
+    .then(() => console.log("Success: Connected to MongoDB Cloud!"))
     .catch((err) => console.error("Error: Could not connect to MongoDB ->", err));
     
 
@@ -31,7 +32,7 @@ app.use('/api/patients', patientRoutes);
 app.use('/api/inventory', inventoryRoutes);
 
 // This MUST be at the very bottom of server.js
-const PORT = 5000;
+const PORT = process.env.PORT || 5000; // Use Render's port OR 5000 locally
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
